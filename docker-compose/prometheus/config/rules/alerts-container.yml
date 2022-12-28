@@ -1,0 +1,41 @@
+groups:
+  - name: alerts-container
+    rules:
+
+      - record: job:container:state
+        expr: time() - sum by(name)(container_last_seen{instance=~".+126.+"}) 
+      - alert: ContainerStoppedRunningRecently
+        expr: job:container:state > 60
+        for: 1m
+        labels:
+          severity: warn
+          team: raptors, leafs
+        annotations:
+          description: 'Container *{{ $labels.name }}* stopped running.'
+          dashboard: 'none'
+
+
+      - record: job:webapp:state
+        expr: time() - app_requests_created{job="my_app"} 
+      - alert: WebappRestartedRecently
+        expr: job:webapp:state < 120
+        for: 1m
+        labels:
+          severity: error
+          team: leafs
+        annotations:
+          description: 'Job *{{ $labels.job }}* was recently restarted.'
+          dashboard: 
+          
+
+      - record: job:webapp:probe
+        expr: probe_success{instance=~".+126.+"} 
+      - alert: WebAppUnreachable
+        expr: job:webapp:probe == 0
+        for: 1m
+        labels:
+          severity: urgent
+          team: leafs
+        annotations:
+          description: 'Probe of *{{ $labels.instance }}* failed.'
+          dashboard: 

@@ -1,0 +1,37 @@
+global:
+  smtp_smarthost: smtp.gmail.com:587
+  smtp_auth_username: "satsqaexperience@gmail.com"
+  smtp_auth_password: "jogijnffpygrhlht"
+  smtp_auth_identity: "satsqaexperience@gmail.com"
+
+route:
+  group_by: ['team', 'alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: email-logs
+  routes:
+    - match_re:
+        team: (raptors|leafs)
+      receiver: email-logs
+      continue: True
+      routes:
+        - match:
+            severity: error
+          receiver: email-logs
+
+inhibit_rules:
+  - source_match:
+      severity: 'urgent'
+    target_match:
+      severity: 'warn'
+    equal: ['alertname','instance']
+
+
+# severity: warn, error, urgent
+# team: leafs. raptors   
+receivers:
+  - name: email-logs
+    email_configs:
+      - to: "satsqaexperience@gmail.com"
+        from: "satsqaexperience@gmail.com"
